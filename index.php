@@ -2,7 +2,8 @@
 
 require_once __DIR__.'/vendor/autoload.php';
 require_once __DIR__.'/config.php';
-
+error_reporting(0);
+date_default_timezone_set('Asia/Kolkata');
 $mail   = new PHPMailer();
 $smarty = new Smarty();
 $smarty->setTemplateDir(__DIR__.'/templates');
@@ -41,18 +42,17 @@ $mail->Subject = Config::MAIL_SUBJECT;
 
 try {
     // First, let's fetch who's to be excluded from these updates
-    $developerIds = getDevelopers();
+    $resolverIds = getResolvers();
     $latestIssues = getLatestIssues();
-
     $issuesUpdatedByExternals = array();
 
     foreach ($latestIssues as $latestIssue) {
         $issue = getIssue($latestIssue['id']);
-
-        if (isUpdatedByExternal($issue, $developerIds)) {
+        if (isUpdatedByExternal($issue, $resolverIds)) {
             $issuesUpdatedByExternals[] = $issue;
         }
     }
+
 
     $view = $smarty->createTemplate('latestIssues.tpl');
     $view->assign(
@@ -63,12 +63,14 @@ try {
         )
     );
 
-    $mail->Body = $view->fetch();
+    file_put_contents("issues.html",$view->fetch());
 
-    if (!$mail->send()) {
-        echo 'Message could not be sent.';
-        echo 'Mailer Error: '.$mail->ErrorInfo;
-    }
+//    $mail->Body = $view->fetch();
+
+//    if (!$mail->send()) {
+//        echo 'Message could not be sent.';
+//        echo 'Mailer Error: '.$mail->ErrorInfo;
+//    }
 } catch (Exception $e) {
     echo $e->getMessage();
 }
@@ -134,6 +136,7 @@ function getIssue($idIssue)
         'lastUpdate'      => $redmineIssue['updated_on'],
         'lastUpdateText'  => time_elapsed_string($redmineIssue['updated_on']),
         'project'         => $redmineIssue['project']['name'],
+        'tracker'         => $redmineIssue['tracker']['name'],
         'projectId'       => $redmineIssue['project']['id'],
         'subject'         => $redmineIssue['subject'],
         'description'     => $redmineIssue['description'],
@@ -146,16 +149,16 @@ function getIssue($idIssue)
     return $issue;
 }
 
-function isUpdatedByExternal($issue, $developerIds)
+function isUpdatedByExternal($issue, $resolverIds)
 {
-    if (in_array($issue['lastUpdateBy_id'], $developerIds)) {
+    if (in_array($issue['lastUpdateBy_id'], $resolverIds)) {
         return false;
     }
 
     return true;
 }
 
-function getDevelopers()
+function getResolvers()
 {
     $response     = callApi(Config::REDMINE_URL.'/groups/'.Config::IGNORE_GROUP.'.json?include=users');
     $RedmineUsers = $response['group']['users'];
@@ -187,7 +190,7 @@ function getLatestIssues($startDate = null)
         $startDate = date('Y-m-d\TH:i:s\Z', strtotime('-'.Config::TIME_WINDOW));
     }
 
-    $latestIssues = getAllRows(Config::REDMINE_URL.'/issues.json?updated_on=>='.$startDate.'&sort=updated_on:desc');
+    $latestIssues = getAllRows(Config::REDMINE_URL.'/issues.json?updated_on=>='.$startDate.'&per_page=100&sort=updated_on:desc');
 
     return $latestIssues;
 }

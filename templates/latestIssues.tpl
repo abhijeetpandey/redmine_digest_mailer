@@ -122,11 +122,11 @@
                         <th>Assigned to</th>
                         <th>Last update</th>
                     </tr>
-                    {foreach from=$issues key=$key item=issue}
+                    {foreach from=$issues key=$key item=$issue}
                         <tr class="{if $key%2==0}dark{/if}">
                             <td class="id"><a href="{$redmine_url}/issues/{$issue.id}">{$issue.id}</a></td>
                             <td class="nowrap status-{$issue.status}">{$issue.status}</td>
-                            <td><a href="{$redmine_url}/projects/{$issue.projectId}" class="project">{$issue.project}</a> - <a href="{$redmine_url}/issues/{$issue.id}" class="subject">{$issue.subject}</a></td>
+                            <td><a href="{$redmine_url}/projects/{$issue.projectId}" class="project">{$issue.project} - {$issue.tracker}</a> - <a href="{$redmine_url}/issues/{$issue.id}" class="subject">{$issue.subject}</a></td>
                             <td class="nowrap">{$issue.lastUpdateBy}</td>
                             <td class="nowrap">{if $issue.assigned}{$issue.assigned}{else}<span class="unassigned">UNASSIGNED</span>{/if}</td>
                             <td class="nowrap">{$issue.lastUpdateText}</td>
@@ -134,7 +134,7 @@
                     {/foreach}
                 </table>
                 <p class="right">Kind Regards,<br />
-                ION network solutions</p>
+                CodeChef Support</p>
 
             </div>
         </div>
