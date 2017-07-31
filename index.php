@@ -38,7 +38,7 @@ if (Config::get('MAIL_SMTPSECURE')) {
 
 $mail->isHTML(true);
 
-$mail->Subject = Config::MAIL_SUBJECT;
+$mail->Subject = Config::MAIL_SUBJECT.date("Y-m-d");
 
 try {
     // First, let's fetch who's to be excluded from these updates
@@ -49,23 +49,22 @@ try {
     foreach ($latestIssues as $latestIssue) {
         $issue = getIssue($latestIssue['id']);
         if (isUpdatedByExternal($issue, $resolverIds)) {
-            $issuesUpdatedByExternals[] = $issue;
+            $issuesUpdatedByExternals[$issue['tracker']][] = $issue;
         }
     }
-
 
     $view = $smarty->createTemplate('latestIssues.tpl');
     $view->assign(
         array(
             'redmine_url'        => Config::REDMINE_URL,
             'issues_time_window' => Config::TIME_WINDOW,
-            'issues'             => $issuesUpdatedByExternals,
+            'issues_with_tracker'=> $issuesUpdatedByExternals,
         )
     );
 
-    file_put_contents("issues.html",$view->fetch());
-
-//    $mail->Body = $view->fetch();
+    $html = $view->fetch();
+    file_put_contents("issues.html", $html);
+    $mail->Body = $html;
 
 //    if (!$mail->send()) {
 //        echo 'Message could not be sent.';

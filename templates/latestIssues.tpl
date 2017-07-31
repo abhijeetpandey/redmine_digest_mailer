@@ -112,7 +112,9 @@
             <div class="content">
 
                 <p>Dear reader,</p>
-                <p>please find attached a list of <b>{$issues|count}</b> open issues.</p>
+                {foreach from=$issues_with_tracker key=$tracker item=$issues}
+                    <h3>{$tracker}</h3>
+                    <p>please find attached a list of <b>{$issues|count}</b> open issues.</p>
                 <table>
                     <tr>
                         <th>ID</th>
@@ -133,6 +135,8 @@
                         </tr>
                     {/foreach}
                 </table>
+                    <br/>
+                {/foreach}
                 <p class="right">Kind Regards,<br />
                 CodeChef Support</p>
 
